@@ -36,6 +36,7 @@ public class MainFrame extends JFrame {
 	private File chosenFile;
 	private final String defaultChosenFileString = "Upload edecek dosya sec";
 	private String chosenFileLabelString = defaultChosenFileString;
+	private List<String> allFiles;
 
 	/**
 	 * Launch the application.
@@ -78,9 +79,9 @@ public class MainFrame extends JFrame {
 		contentPane.setLayout(null);
 		fileChooser = new JFileChooser();
 		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-		List<String> files = getAllFileList();
+		allFiles = getAllFileList();
 		final JComboBox<String> comboBox = new JComboBox<String>();
-		for (String fileName : files) {
+		for (String fileName : allFiles) {
 			comboBox.addItem(fileName);
 		}
 		comboBox.setBounds(10, 21, 423, 22);
@@ -138,12 +139,7 @@ public class MainFrame extends JFrame {
 		JButton btnNewButton_2 = new JButton("Refresh");
 		btnNewButton_2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				List<String> files = getAllFileList();
-				comboBox.removeAllItems();
-				for (String file : files) {
-					comboBox.addItem(file);
-				}
-				JOptionPane.showMessageDialog(null, "Liste yenilendi", "Liste yenilendi", JOptionPane.INFORMATION_MESSAGE);
+				refreshFileList(comboBox);
 			}
 		});
 		btnNewButton_2.setBounds(192, 64, 91, 23);
@@ -166,6 +162,12 @@ public class MainFrame extends JFrame {
 					try {
 						String fileName = chosenFile.getName();
 						byte[] chosenFileData = FileUtils.readFileToByteArray(chosenFile);
+						for (String prevFile : allFiles) {
+							if (prevFile.equals(fileName)) {
+								JOptionPane.showMessageDialog(null, "Seçtiğiniz dosya isminde başka bir dosya kayıtlı. İsim değişikliği şart.", "Olmadi", JOptionPane.ERROR_MESSAGE);
+								return;
+							}
+						}
 						SPFileRequestDto request = RequestDtoFactory.createSPFileRequest(RequestApplication.WEB);
 						SPFileDto fileDto = new SPFileDto();
 						request.setSpFileDto(fileDto);
@@ -176,10 +178,10 @@ public class MainFrame extends JFrame {
 							if (response.getError() != null) {
 								JOptionPane.showMessageDialog(null, "Hatalarr!! Hata Detayi:" + response.getError(), "HATA!!", JOptionPane.ERROR_MESSAGE);
 							} else {
-								JOptionPane.showMessageDialog(null, "Islem tamam. Yeni eklenen dosyayi gormek icin \"Refresh\" butonuna basiniz.", "Tamamdir", JOptionPane.INFORMATION_MESSAGE);
+								JOptionPane.showMessageDialog(null, "Islem tamam. Yeni eklenen dosyayi listelenenlar arasinda gorebilirsiniz.", "Tamamdir", JOptionPane.INFORMATION_MESSAGE);
 								chosenFile = null;
 								chosenFileLabel.setText(defaultChosenFileString);
-
+								refreshFileList(comboBox);
 							}
 						}
 					} catch (IOException e1) {
@@ -203,5 +205,14 @@ public class MainFrame extends JFrame {
 		List<String> files = response.getSpFileDto().getAllFileNames();
 		Collections.sort(files);
 		return files;
+	}
+
+	private void refreshFileList(final JComboBox<String> comboBox) {
+		allFiles = getAllFileList();
+		comboBox.removeAllItems();
+		for (String file : allFiles) {
+			comboBox.addItem(file);
+		}
+		JOptionPane.showMessageDialog(null, "Liste yenilendi", "Liste yenilendi", JOptionPane.INFORMATION_MESSAGE);
 	}
 }

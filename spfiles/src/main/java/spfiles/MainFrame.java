@@ -79,14 +79,15 @@ public class MainFrame extends JFrame {
 		contentPane.setLayout(null);
 		fileChooser = new JFileChooser();
 		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-		allFiles = getAllFileList();
 		final JComboBox<String> comboBox = new JComboBox<String>();
-		for (String fileName : allFiles) {
-			comboBox.addItem(fileName);
-		}
-		comboBox.setBounds(10, 21, 423, 22);
-		contentPane.add(comboBox);
+		Thread comboBoxFetcher = new Thread(new Runnable() {
 
+			public void run() {
+				createComboBox(comboBox);
+
+			}
+		});
+		comboBoxFetcher.start();
 		JButton btnNewButton = new JButton("Masaustune DL et");
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -195,6 +196,18 @@ public class MainFrame extends JFrame {
 		btnNewButton_4.setBounds(192, 123, 91, 23);
 		contentPane.add(btnNewButton_4);
 
+	}
+
+	private void createComboBox(final JComboBox<String> comboBox) {
+		allFiles = getAllFileList();
+		System.out.println("Files fetched.");
+		for (String fileName : allFiles) {
+			comboBox.addItem(fileName);
+		}
+		comboBox.setBounds(10, 21, 423, 22);
+		contentPane.add(comboBox);
+		contentPane.repaint();
+		System.out.println("Content pane repainted.");
 	}
 
 	private List<String> getAllFileList() {

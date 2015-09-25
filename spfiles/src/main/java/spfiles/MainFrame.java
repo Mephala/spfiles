@@ -23,6 +23,7 @@ import org.apache.commons.io.FileUtils;
 
 import service.provider.client.executor.ServiceClient;
 import service.provider.common.core.RequestApplication;
+import service.provider.common.core.ResponseStatus;
 import service.provider.common.dto.SPFileDto;
 import service.provider.common.request.RequestDtoFactory;
 import service.provider.common.request.SPFileRequestDto;
@@ -72,7 +73,7 @@ public class MainFrame extends JFrame {
 		// ServiceClient.initialize("http://localhost:8080/");
 		setTitle("SPFManager - Gökhanabi");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 451, 300);
+		setBounds(100, 100, 525, 300);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -112,15 +113,15 @@ public class MainFrame extends JFrame {
 				}
 			}
 		});
-		btnNewButton.setBounds(10, 64, 147, 23);
+		btnNewButton.setBounds(10, 64, 181, 23);
 		contentPane.add(btnNewButton);
 
 		JLabel lblNewLabel = new JLabel("Upload Edilecek Dosya");
-		lblNewLabel.setBounds(10, 98, 132, 14);
+		lblNewLabel.setBounds(10, 98, 169, 14);
 		contentPane.add(lblNewLabel);
 
 		final JLabel chosenFileLabel = new JLabel(chosenFileLabelString);
-		chosenFileLabel.setBounds(152, 98, 281, 14);
+		chosenFileLabel.setBounds(191, 98, 314, 14);
 		contentPane.add(chosenFileLabel);
 
 		JButton btnNewButton_1 = new JButton("Upload Dosya Sec");
@@ -134,7 +135,7 @@ public class MainFrame extends JFrame {
 				}
 			}
 		});
-		btnNewButton_1.setBounds(10, 123, 147, 23);
+		btnNewButton_1.setBounds(10, 123, 181, 23);
 		contentPane.add(btnNewButton_1);
 
 		JButton btnNewButton_2 = new JButton("Refresh");
@@ -143,7 +144,7 @@ public class MainFrame extends JFrame {
 				refreshFileList(comboBox);
 			}
 		});
-		btnNewButton_2.setBounds(192, 64, 91, 23);
+		btnNewButton_2.setBounds(222, 64, 125, 23);
 		contentPane.add(btnNewButton_2);
 
 		JButton btnNewButton_3 = new JButton("Resetle");
@@ -153,7 +154,7 @@ public class MainFrame extends JFrame {
 				chosenFile = null;
 			}
 		});
-		btnNewButton_3.setBounds(324, 123, 91, 23);
+		btnNewButton_3.setBounds(380, 124, 125, 23);
 		contentPane.add(btnNewButton_3);
 
 		JButton btnNewButton_4 = new JButton("Upload Et");
@@ -165,7 +166,8 @@ public class MainFrame extends JFrame {
 						byte[] chosenFileData = FileUtils.readFileToByteArray(chosenFile);
 						for (String prevFile : allFiles) {
 							if (prevFile.equals(fileName)) {
-								JOptionPane.showMessageDialog(null, "Seçtiğiniz dosya isminde başka bir dosya kayıtlı. İsim değişikliği şart.", "Olmadi", JOptionPane.ERROR_MESSAGE);
+								JOptionPane.showMessageDialog(null, "Seçtiğiniz dosya isminde başka bir dosya kayıtlı. İsim değişikliği şart.", "Olmadi",
+										JOptionPane.ERROR_MESSAGE);
 								return;
 							}
 						}
@@ -179,7 +181,8 @@ public class MainFrame extends JFrame {
 							if (response.getError() != null) {
 								JOptionPane.showMessageDialog(null, "Hatalarr!! Hata Detayi:" + response.getError(), "HATA!!", JOptionPane.ERROR_MESSAGE);
 							} else {
-								JOptionPane.showMessageDialog(null, "Islem tamam. Yeni eklenen dosyayi listelenenlar arasinda gorebilirsiniz.", "Tamamdir", JOptionPane.INFORMATION_MESSAGE);
+								JOptionPane.showMessageDialog(null, "Islem tamam. Yeni eklenen dosyayi listelenenlar arasinda gorebilirsiniz.", "Tamamdir",
+										JOptionPane.INFORMATION_MESSAGE);
 								chosenFile = null;
 								chosenFileLabel.setText(defaultChosenFileString);
 								refreshFileList(comboBox);
@@ -193,17 +196,48 @@ public class MainFrame extends JFrame {
 				}
 			}
 		});
-		btnNewButton_4.setBounds(192, 123, 91, 23);
+		btnNewButton_4.setBounds(222, 123, 125, 23);
 		contentPane.add(btnNewButton_4);
+
+		JButton btnNewButton_5 = new JButton("Sil");
+		btnNewButton_5.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				int areYouSure = JOptionPane.showConfirmDialog(null, "Are you sure you want to delete this file?");
+				if (areYouSure == 0) {
+					// TODO Deletion process.
+					String fileName = (String) comboBox.getSelectedItem();
+					SPFileRequestDto spFileRequest = RequestDtoFactory.createSPFileRequest(RequestApplication.WEB);
+					SPFileDto fileDto = new SPFileDto();
+					fileDto.setFileName(fileName);
+					spFileRequest.setDeleteFile(Boolean.TRUE);
+					spFileRequest.setSpFileDto(fileDto);
+					SPFileResponseDto response = ServiceClient.getFileData(spFileRequest);
+					if (response == null) {
+						JOptionPane.showMessageDialog(null, "Failed to communicate with server", "Technical Failure", JOptionPane.ERROR_MESSAGE);
+						return;
+					} else if (ResponseStatus.ERROR.equals(response.getResponseStatus())) {
+						JOptionPane.showMessageDialog(null, "Failed to delete file at server side....", "Technical Failure", JOptionPane.ERROR_MESSAGE);
+						return;
+					} else if (ResponseStatus.OK.equals(response.getResponseStatus())) {
+						JOptionPane.showMessageDialog(null, "Dosya basariyla silindi", "Success", JOptionPane.INFORMATION_MESSAGE);
+						refreshFileList(comboBox);
+					}
+				}
+			}
+		});
+		btnNewButton_5.setBounds(380, 63, 125, 25);
+		contentPane.add(btnNewButton_5);
 
 	}
 
 	private void createComboBox(final JComboBox<String> comboBox) {
 		allFiles = getAllFileList();
 		System.out.println("Files fetched.");
+		comboBox.removeAllItems();
 		for (String fileName : allFiles) {
 			comboBox.addItem(fileName);
 		}
+		comboBox.repaint();
 		comboBox.setBounds(10, 21, 423, 22);
 		contentPane.add(comboBox);
 		contentPane.repaint();

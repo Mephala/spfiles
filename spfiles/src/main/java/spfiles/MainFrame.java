@@ -179,7 +179,7 @@ public class MainFrame extends JFrame {
 						if (sendResult)
 							JOptionPane.showMessageDialog(null, "Upload ettim.", "Basarili", JOptionPane.INFORMATION_MESSAGE);
 						else
-							JOptionPane.showMessageDialog(null, "Upload ettim.", "Basarili", JOptionPane.ERROR_MESSAGE);
+							JOptionPane.showMessageDialog(null, "Upload edemedim, zivadim.", "Yakismadi.", JOptionPane.ERROR_MESSAGE);
 						refreshFileList(comboBox);
 					} catch (IOException e1) {
 						JOptionPane.showMessageDialog(null, "Upload Hatasi! Detay:" + e1.getMessage(), "UploadHatasi!", JOptionPane.ERROR_MESSAGE);

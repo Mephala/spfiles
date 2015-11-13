@@ -5,6 +5,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 
@@ -38,6 +39,9 @@ public class MainFrame extends JFrame {
 	private final String defaultChosenFileString = "Upload edecek dosya sec";
 	private String chosenFileLabelString = defaultChosenFileString;
 	private List<String> allFiles;
+	private final String serverIp;
+	private final String serverDlPath;
+	private final boolean isTest = true;
 
 	/**
 	 * Launch the application.
@@ -70,7 +74,14 @@ public class MainFrame extends JFrame {
 	 * Create the frame.
 	 */
 	public MainFrame() {
-		// ServiceClient.initialize("http://localhost:8080/");
+		if (isTest) {
+			this.serverDlPath = "http://localhost:8080/";
+			this.serverIp = "localhost";
+		} else {
+			this.serverDlPath = "http://sert-yapi.com/serviceProvider/";
+			this.serverIp = "sert-yapi.com";
+		}
+		ServiceClient.initialize(serverDlPath);
 		setTitle("SPFManager - Gökhanabi");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 525, 300);
@@ -93,23 +104,16 @@ public class MainFrame extends JFrame {
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String selectedItem = (String) comboBox.getSelectedItem();
-				SPFileRequestDto dlRequest = RequestDtoFactory.createSPFileRequest(RequestApplication.WEB);
-				SPFileDto dlFileDto = new SPFileDto();
-				dlFileDto.setFileName(selectedItem);
-				dlRequest.setSpFileDto(dlFileDto);
-				SPFileResponseDto response = ServiceClient.getFileData(dlRequest);
-				if (response != null && response.getSpFileDto() != null && response.getSpFileDto().getData() != null && response.getSpFileDto().getData().length > 0) {
-					byte[] data = response.getSpFileDto().getData();
-					String dlPath = System.getProperty("user.home") + File.separator + "Desktop" + File.separator + selectedItem;
-					File dlFile = new File(dlPath);
-					try {
-						FileUtils.writeByteArrayToFile(dlFile, data);
-						JOptionPane.showMessageDialog(null, "Masaustunde secilen dosya olusturuldu!", "Yaptim!", JOptionPane.INFORMATION_MESSAGE);
-					} catch (IOException e1) {
-						JOptionPane.showMessageDialog(null, "DL OLMADI! Detay:" + e1.getMessage(), "Hata", JOptionPane.ERROR_MESSAGE);
-					}
-				} else {
-					JOptionPane.showMessageDialog(null, "DL OLMADI!", "Hata", JOptionPane.ERROR_MESSAGE);
+				String dlPath = System.getProperty("user.home") + File.separator + "Desktop" + File.separator + selectedItem;
+				File downloadFile = new File(dlPath);
+				if (downloadFile.exists())
+					downloadFile.delete();
+				try {
+					FileUtils.copyURLToFile(new URL(serverDlPath + selectedItem + "/downloadFile.do"), downloadFile);
+					JOptionPane.showMessageDialog(null, "Download basarili", "Basari", JOptionPane.INFORMATION_MESSAGE);
+				} catch (Throwable t) {
+					t.printStackTrace();
+					JOptionPane.showMessageDialog(null, "Olmadi arkadas.", "Basarisizlik, Maglubiyet...", JOptionPane.ERROR_MESSAGE);
 				}
 			}
 		});
@@ -171,23 +175,12 @@ public class MainFrame extends JFrame {
 								return;
 							}
 						}
-						SPFileRequestDto request = RequestDtoFactory.createSPFileRequest(RequestApplication.WEB);
-						SPFileDto fileDto = new SPFileDto();
-						request.setSpFileDto(fileDto);
-						fileDto.setFileName(fileName);
-						fileDto.setData(chosenFileData);
-						SPFileResponseDto response = ServiceClient.getFileData(request);
-						if (response != null) {
-							if (response.getError() != null) {
-								JOptionPane.showMessageDialog(null, "Hatalarr!! Hata Detayi:" + response.getError(), "HATA!!", JOptionPane.ERROR_MESSAGE);
-							} else {
-								JOptionPane.showMessageDialog(null, "Islem tamam. Yeni eklenen dosyayi listelenenlar arasinda gorebilirsiniz.", "Tamamdir",
-										JOptionPane.INFORMATION_MESSAGE);
-								chosenFile = null;
-								chosenFileLabel.setText(defaultChosenFileString);
-								refreshFileList(comboBox);
-							}
-						}
+						boolean sendResult = ServiceClient.sendFileToSPS(chosenFile, 2005, "localhost");
+						if (sendResult)
+							JOptionPane.showMessageDialog(null, "Upload ettim.", "Basarili", JOptionPane.INFORMATION_MESSAGE);
+						else
+							JOptionPane.showMessageDialog(null, "Upload ettim.", "Basarili", JOptionPane.ERROR_MESSAGE);
+						refreshFileList(comboBox);
 					} catch (IOException e1) {
 						JOptionPane.showMessageDialog(null, "Upload Hatasi! Detay:" + e1.getMessage(), "UploadHatasi!", JOptionPane.ERROR_MESSAGE);
 					}

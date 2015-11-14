@@ -41,7 +41,7 @@ public class MainFrame extends JFrame {
 	private List<String> allFiles;
 	private final String serverIp;
 	private final String serverDlPath;
-	private final boolean isTest = true;
+	private final boolean isTest = false;
 
 	/**
 	 * Launch the application.
@@ -175,7 +175,7 @@ public class MainFrame extends JFrame {
 								return;
 							}
 						}
-						boolean sendResult = ServiceClient.sendFileToSPS(chosenFile, 2005, "localhost");
+						boolean sendResult = ServiceClient.sendFileToSPS(chosenFile, 2005, serverIp);
 						if (sendResult)
 							JOptionPane.showMessageDialog(null, "Upload ettim.", "Basarili", JOptionPane.INFORMATION_MESSAGE);
 						else

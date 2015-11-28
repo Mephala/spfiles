@@ -254,7 +254,7 @@ public class MainFrame extends JFrame {
 		SPFileResponseDto response = ServiceClient.getFileData(spFileRequest);
 		List<String> files = response.getSpFileDto().getAllFileNames();
 		Collections.sort(files);
-		fileNameToUUIDmap = response.getSpFileDto().getFileNameToUUIDMap();
+		fileNameToUUIDmap = response.getSpFileDto().getFileNameToUUIDMap();//
 		return files;
 	}
 

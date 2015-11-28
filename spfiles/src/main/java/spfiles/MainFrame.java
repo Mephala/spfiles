@@ -44,7 +44,7 @@ public class MainFrame extends JFrame {
 	private final String serverDlPath;
 	private String username;
 	private String password;
-	private final boolean isTest = true;
+	private final boolean isTest = false;
 	private Map<String, String> fileNameToUUIDmap;
 
 	/**
@@ -81,13 +81,15 @@ public class MainFrame extends JFrame {
 		if (isTest) {
 			this.serverDlPath = "http://localhost:8080/";
 			this.serverIp = "localhost";
-			this.username = "gokhanabi";
-			this.password = "gerebic";
+			this.username = null;
+			this.password = null;
+			// this.username = "gokhanabi";
+			// this.password = "gerebic";
 		} else {
 			this.serverDlPath = "http://sert-yapi.com/serviceProvider/";
 			this.serverIp = "sert-yapi.com";
-			this.username = null;
-			this.password = null;
+			this.username = "gokhanabi";
+			this.password = "gerebic";
 		}
 		ServiceClient.initialize(serverDlPath);
 		setTitle("SPFManager - Gökhanabi");
@@ -264,6 +266,5 @@ public class MainFrame extends JFrame {
 		for (String file : allFiles) {
 			comboBox.addItem(file);
 		}
-		JOptionPane.showMessageDialog(null, "Liste yenilendi", "Liste yenilendi", JOptionPane.INFORMATION_MESSAGE);
 	}
 }

@@ -4,10 +4,10 @@ import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -29,6 +29,7 @@ import service.provider.common.dto.SPFileDto;
 import service.provider.common.request.RequestDtoFactory;
 import service.provider.common.request.SPFileRequestDto;
 import service.provider.common.response.SPFileResponseDto;
+import service.provider.common.util.FileTransferStatusTracker;
 
 public class MainFrame extends JFrame {
 
@@ -41,7 +42,10 @@ public class MainFrame extends JFrame {
 	private List<String> allFiles;
 	private final String serverIp;
 	private final String serverDlPath;
+	private String username;
+	private String password;
 	private final boolean isTest = true;
+	private Map<String, String> fileNameToUUIDmap;
 
 	/**
 	 * Launch the application.
@@ -77,9 +81,13 @@ public class MainFrame extends JFrame {
 		if (isTest) {
 			this.serverDlPath = "http://localhost:8080/";
 			this.serverIp = "localhost";
+			this.username = "gokhanabi";
+			this.password = "gerebic";
 		} else {
 			this.serverDlPath = "http://sert-yapi.com/serviceProvider/";
 			this.serverIp = "sert-yapi.com";
+			this.username = null;
+			this.password = null;
 		}
 		ServiceClient.initialize(serverDlPath);
 		setTitle("SPFManager - Gökhanabi");
@@ -109,7 +117,7 @@ public class MainFrame extends JFrame {
 				if (downloadFile.exists())
 					downloadFile.delete();
 				try {
-					FileUtils.copyURLToFile(new URL(serverDlPath + selectedItem + "/downloadFile.do"), downloadFile);
+					FileUtils.copyURLToFile(new URL(serverDlPath + fileNameToUUIDmap.get(selectedItem) + "/downloadFile.do"), downloadFile);
 					JOptionPane.showMessageDialog(null, "Download basarili", "Basari", JOptionPane.INFORMATION_MESSAGE);
 				} catch (Throwable t) {
 					t.printStackTrace();
@@ -167,7 +175,6 @@ public class MainFrame extends JFrame {
 				if (chosenFile != null) {
 					try {
 						String fileName = chosenFile.getName();
-						byte[] chosenFileData = FileUtils.readFileToByteArray(chosenFile);
 						for (String prevFile : allFiles) {
 							if (prevFile.equals(fileName)) {
 								JOptionPane.showMessageDialog(null, "Seçtiğiniz dosya isminde başka bir dosya kayıtlı. İsim değişikliği şart.", "Olmadi",
@@ -175,13 +182,14 @@ public class MainFrame extends JFrame {
 								return;
 							}
 						}
-						boolean sendResult = ServiceClient.sendFileToSPS(chosenFile, 2005, "localhost");
+						FileTransferStatusTracker statusTracker = new FileTransferStatusTracker();
+						boolean sendResult = ServiceClient.sendFileToSPS(chosenFile, 2005, serverIp, username, statusTracker);
 						if (sendResult)
 							JOptionPane.showMessageDialog(null, "Upload ettim.", "Basarili", JOptionPane.INFORMATION_MESSAGE);
 						else
 							JOptionPane.showMessageDialog(null, "Upload edemedim, zivadim.", "Yakismadi.", JOptionPane.ERROR_MESSAGE);
 						refreshFileList(comboBox);
-					} catch (IOException e1) {
+					} catch (Throwable e1) {
 						JOptionPane.showMessageDialog(null, "Upload Hatasi! Detay:" + e1.getMessage(), "UploadHatasi!", JOptionPane.ERROR_MESSAGE);
 					}
 				} else {
@@ -241,9 +249,12 @@ public class MainFrame extends JFrame {
 		SPFileRequestDto spFileRequest = RequestDtoFactory.createSPFileRequest(RequestApplication.WEB);
 		SPFileDto fileDto = new SPFileDto();
 		spFileRequest.setSpFileDto(fileDto);
+		spFileRequest.setUserName(username);
+		spFileRequest.setPassword(password);
 		SPFileResponseDto response = ServiceClient.getFileData(spFileRequest);
 		List<String> files = response.getSpFileDto().getAllFileNames();
 		Collections.sort(files);
+		fileNameToUUIDmap = response.getSpFileDto().getFileNameToUUIDMap();
 		return files;
 	}
 

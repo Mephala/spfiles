@@ -8,6 +8,7 @@ import service.provider.common.dto.SPFileDto;
 import service.provider.common.request.RequestDtoFactory;
 import service.provider.common.request.SPFileRequestDto;
 import service.provider.common.response.SPFileResponseDto;
+import service.provider.common.util.CommonUtils;
 import service.provider.common.util.FileTransferStatusTracker;
 
 import javax.swing.*;
@@ -20,6 +21,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class MainFrame extends JFrame {
 
@@ -34,6 +36,7 @@ public class MainFrame extends JFrame {
     private File chosenFile;
     private String chosenFileLabelString = defaultChosenFileString;
     private List<String> allFiles;
+    private Map<String, String> fileNameToDLUUIDPath;
 
     /**
      * Create the frame.
@@ -74,7 +77,10 @@ public class MainFrame extends JFrame {
                 if (downloadFile.exists())
                     downloadFile.delete();
                 try {
-                    FileUtils.copyURLToFile(new URL(serverDlPath + selectedItem + "/downloadFile.do"), downloadFile);
+                    String dlUUID = fileNameToDLUUIDPath.get(selectedItem);
+                    if (CommonUtils.isEmpty(dlUUID))
+                        dlUUID = selectedItem;
+                    FileUtils.copyURLToFile(new URL(serverDlPath + dlUUID + "/downloadFile.do"), downloadFile);
                     JOptionPane.showMessageDialog(null, "Download basarili", "Basari", JOptionPane.INFORMATION_MESSAGE);
                 } catch (Throwable t) {
                     t.printStackTrace();
@@ -259,6 +265,7 @@ public class MainFrame extends JFrame {
         spFileRequest.setPassword("gerebic");
         SPFileResponseDto response = ServiceClient.getFileData(spFileRequest);
         List<String> files = response.getSpFileDto().getAllFileNames();
+        fileNameToDLUUIDPath = response.getSpFileDto().getFileNameToUUIDMap();
         Collections.sort(files);
         return files;
     }

@@ -255,6 +255,8 @@ public class MainFrame extends JFrame {
         SPFileRequestDto spFileRequest = RequestDtoFactory.createSPFileRequest(RequestApplication.WEB);
         SPFileDto fileDto = new SPFileDto();
         spFileRequest.setSpFileDto(fileDto);
+        spFileRequest.setUserName("gokhanabi");
+        spFileRequest.setPassword("gerebic");
         SPFileResponseDto response = ServiceClient.getFileData(spFileRequest);
         List<String> files = response.getSpFileDto().getAllFileNames();
         Collections.sort(files);
